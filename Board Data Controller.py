@@ -67,7 +67,7 @@ def GetScore(chip):
 
 
 
-map = {0: '◯', 1: '🔴', 10: '🟡'}
+map = {0: '⚫', 1: '🔴', 10: '🟡'}
 
 def VisualBoard():
     str = ''
