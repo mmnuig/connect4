@@ -1,6 +1,13 @@
 
 import numpy as np
+import math
+
 board = np.zeros((6, 7))
+
+# Dev variables
+aiChip = 'r'
+playerChip = 'y'
+debugOn = False
 
 
 
@@ -9,6 +16,8 @@ def SetPos(r, c, chip):
         board[r, c] = 1
     elif chip == 'y':
         board[r, c] = 10
+    elif chip == 'e':
+        board[r, c] = 0
     
 def GetPos(r, c):
     if r < 0 or r > 5 or c < 0 or c > 6:
@@ -26,18 +35,161 @@ def Drop(c, chip):
     while r >= 0:
         if GetPos(r, c) == 'e':
             SetPos(r, c, chip)
-            #return
-            return [r, c]
+            return True
         r -= 1
     #raise Exception("Column is full. Cannot drop chip.")
     return False
 
+def AntiDrop(c):
+    for r in range(6):
+        if GetPos(r, c) != 'e':
+            SetPos(r, c, 'e')
+            return
+    raise Exception("Trying to remove chip from empty column.")
+
+def GetAvailableColumns():
+    arr = []
+    for c in range(7):
+        if GetPos(0, c) == 'e':
+            arr.append(c)
+    return arr
+
+
+
+def minimax(isMaximising, depth):
+    
+    if debugOn == True:
+        print("depth is ", depth)
+    
+    if(isMaximising):
+        
+        chip = aiChip
+        bestScore = -math.inf
+        
+        options = GetAvailableColumns()
+        if debugOn == True:
+            print("maximising options are: ", options)
+        for column in options:
+            Drop(column, chip)
+            if debugOn == True:
+                print("depth is ", depth, " & try drop in col ",column)
+                VisualBoard()
+            score = GetScore()
+            if score == math.inf:
+                bestScore = math.inf
+                AntiDrop(column)
+                if debugOn == True:
+                    print("pruned score (maximiser win)")
+                break
+            elif depth == 1:
+                bestScore = max(bestScore, score)
+            else:
+                bestScore = max(bestScore, minimax(not isMaximising, depth - 1))
+            AntiDrop(column)
+            if debugOn == True:
+                print("score = ", score, ", undo drop in col ",column)
+                VisualBoard()
+        
+        if debugOn == True:
+            print("maximising best score ", bestScore)
+        return bestScore
+        
+    else:
+        
+        chip = playerChip
+        bestScore = math.inf
+        
+        options = GetAvailableColumns()
+        if debugOn == True:
+            print("minimising options are: ", options)
+        
+        for column in options:
+            Drop(column, chip)
+            if debugOn == True:
+                print("depth is ", depth, " & try drop in col ",column)
+                VisualBoard()
+            score = GetScore()
+            if score == -math.inf:
+                bestScore = -math.inf
+                AntiDrop(column)
+                if debugOn == True:
+                    print("pruned score (minimiser win)")
+                break
+            elif depth == 1:
+                bestScore = min(bestScore, score)
+            else:
+                bestScore = min(bestScore, minimax(not isMaximising, depth - 1))
+            AntiDrop(column)
+            if debugOn == True:
+                print("score = ", score, ", undo drop in col ",column)
+                VisualBoard()
+        
+        if debugOn == True:
+            print("minimising best score ", bestScore)
+        return bestScore
+    
+def GetBestMove(depth):
+    
+    bestScore = -math.inf
+    bestMove = -1;
+    
+    options = GetAvailableColumns()
+    for column in options:
+        Drop(column, aiChip)
+        if debugOn == True:
+            print("depth is ", depth, " & try drop in col ",column)
+            VisualBoard()
+        score = GetScore()
+        if score == math.inf:
+            bestScore = math.inf
+            bestMove = column
+            AntiDrop(column)
+            break
+        elif depth == 1:
+            if score >= bestScore:
+                bestScore = score;
+                bestMove = column
+        else:
+            minimaxScore = minimax(False, depth - 1)
+            if minimaxScore >= bestScore:
+                bestScore = minimaxScore
+                bestMove = column
+        AntiDrop(column)
+        if debugOn == True:
+            print("score = ", score, ", undo drop in col ",column)
+            VisualBoard()
+    
+    Drop(bestMove, aiChip)
+    tempScore = GetScore()
+    
+    if tempScore == math.inf:
+        print("AI wins!")
+    elif tempScore == -math.inf:
+        print("Human wins!")
+        
+    AntiDrop(bestMove)
+    
+    return bestMove        
+        
 
 
 dirList = np.array([[1, -1], [1, 0], [1, 1], [0, 1]])
-chipScore = np.array([[0, 3, 5, 9999], [1, 5, 30, 9999], [3, 10, 60, 9999]])
+chipScore = np.array([[0, 3, 5, math.inf], [1, 5, 30, math.inf], [3, 10, 60, math.inf]])
 
-def GetScore(chip):
+def GetScore():
+    aiScore = ScoreCalculator(aiChip)
+    playerScore = ScoreCalculator(playerChip)
+    
+    if aiScore == math.inf and playerScore == math.inf:
+        raise Exception ("Simulataneous win and lose")
+    elif aiScore == math.inf:
+        return math.inf
+    elif playerScore == math.inf:
+        return -math.inf
+    else:
+        return aiScore - playerScore
+
+def ScoreCalculator(chip):
     score = 0;
     for r in range(6):
         for c in range (7):
@@ -64,7 +216,7 @@ def GetScore(chip):
                                 score += chipScore[0][it]
                             it += 1
     return score
-
+        
 
 
 map = {0: '◯', 1: '🔴', 10: '🟡'}
@@ -78,11 +230,15 @@ def VisualBoard():
     print(str)
 
 
-Drop(1, 'r')
-Drop(2, 'r')
-Drop(2, 'r')
-Drop(4, 'y')
-Drop(5, 'y')
-Drop(5, 'y')
 
-VisualBoard()
+aiDepth = 4
+# 1 is weak, 2-4 is ideal, 5+ is slow
+
+while True:
+    VisualBoard()
+    print("Human drops in Column", end=' ')
+    temp = int(input())
+    Drop(temp, playerChip)
+    temp = GetBestMove(aiDepth)
+    Drop(temp, aiChip)
+    print("AI drops in Column", temp)
