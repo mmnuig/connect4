@@ -1,15 +1,21 @@
 
 import numpy as np
 import math
+import time
 
-board = np.zeros((6, 7))
+
 
 # Dev variables
-aiChip = 'r'
-playerChip = 'y'
+playerChip = 'r'
+aiChip = 'y'
+firstMove = 'ai'
+aiDepth = 2  # 1 is weak, 2-4 is ideal, 5+ is slow
+pause = True
 debugOn = False
 
 
+
+board = np.zeros((6, 7))
 
 def SetPos(r, c, chip):
     if chip == 'r':
@@ -131,7 +137,7 @@ def minimax(isMaximising, depth):
 def GetBestMove(depth):
     
     bestScore = -math.inf
-    bestMove = -1;
+    bestMove = -1
     
     options = GetAvailableColumns()
     for column in options:
@@ -147,7 +153,7 @@ def GetBestMove(depth):
             break
         elif depth == 1:
             if score >= bestScore:
-                bestScore = score;
+                bestScore = score
                 bestMove = column
         else:
             minimaxScore = minimax(False, depth - 1)
@@ -158,16 +164,6 @@ def GetBestMove(depth):
         if debugOn == True:
             print("score = ", score, ", undo drop in col ",column)
             VisualBoard()
-    
-    Drop(bestMove, aiChip)
-    tempScore = GetScore()
-    
-    if tempScore == math.inf:
-        print("AI wins!")
-    elif tempScore == -math.inf:
-        print("Human wins!")
-        
-    AntiDrop(bestMove)
     
     return bestMove        
         
@@ -190,7 +186,7 @@ def GetScore():
         return aiScore - playerScore
 
 def ScoreCalculator(chip):
-    score = 0;
+    score = 0
     for r in range(6):
         for c in range (7):
             if GetPos(r, c) == chip:
@@ -199,7 +195,7 @@ def ScoreCalculator(chip):
                     backSpace = GetPos(r - dir[0], c - dir[1])
                     if backSpace != chip:
                         if backSpace == 'e':
-                            openEnds += 1;
+                            openEnds += 1
                         it = 1
                         while it <= 3:
                             nextSpace = GetPos(r + it * dir[0], c + it * dir[1])
@@ -219,10 +215,10 @@ def ScoreCalculator(chip):
         
 
 
-map = {0: '◯', 1: '🔴', 10: '🟡'}
+map = {0: '⬜', 1: '🔴', 10: '🟡'}
 
 def VisualBoard():
-    str = ''
+    str = '\n'
     for r in range(6):
         for c in range(7):
             str += map[board[r, c]]
@@ -231,14 +227,35 @@ def VisualBoard():
 
 
 
-aiDepth = 4
-# 1 is weak, 2-4 is ideal, 5+ is slow
+def CheckWin():
+    testScore = GetScore()
+    if testScore == math.inf:
+        VisualBoard()
+        print("AI wins!\n")
+        return True
+    elif testScore == -math.inf:
+        VisualBoard()
+        print("Human wins!\n")
+        return True
+    return False
+
+if firstMove == 'ai':       
+    selection = GetBestMove(aiDepth)
+    Drop(selection, aiChip)
+    print("AI drops in Column", selection)
+    VisualBoard()
+elif firstMove == 'player':
+    VisualBoard()
 
 while True:
-    VisualBoard()
     print("Human drops in Column", end=' ')
-    temp = int(input())
-    Drop(temp, playerChip)
-    temp = GetBestMove(aiDepth)
-    Drop(temp, aiChip)
-    print("AI drops in Column", temp)
+    selection = int(input())
+    Drop(selection, playerChip)
+    if CheckWin(): break
+    if pause: VisualBoard(); time.sleep(1)
+    
+    selection = GetBestMove(aiDepth)
+    Drop(selection, aiChip)
+    print("AI drops in Column", selection)
+    if CheckWin(): break
+    VisualBoard()
