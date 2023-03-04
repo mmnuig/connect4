@@ -15,4 +15,4 @@ def CalculateCircleCentre(target, tl, tr, bl, br):
     
     return final
 
-print(CalcPoint([2, 4], [332, 78], [1054, 73], [351, 608], [1034, 607]))
+print(CalculateCircleCentre([2, 4], [332, 78], [1054, 73], [351, 608], [1034, 607]))

@@ -2,7 +2,7 @@ import cv2, math, numpy, kevin
 
 img = cv2.imread("grid_with_tiles.png")
 
-scale_factor = 66;
+scale_factor = 66
 img_width = int(img.shape[1] * scale_factor / 100)
 img_height = int(img.shape[0] * scale_factor / 100)
 scaled_img_size = (img_width, img_height)
