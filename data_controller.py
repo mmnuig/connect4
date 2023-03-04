@@ -6,10 +6,10 @@ import time
 
 
 # Dev variables
-playerChip = 'r'
-aiChip = 'y'
+playerChip = 'y'
+aiChip = 'r'
 firstMove = 'ai'
-aiDepth = 2  # 1 is weak, 2-4 is ideal, 5+ is slow
+aiDepth = 4  # 1 is weak, 2-4 is ideal, 5+ is slow
 pause = True
 debugOn = False
 
