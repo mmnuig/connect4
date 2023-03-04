@@ -5,7 +5,7 @@ def tidy_up():
   camera.release()
   cv2.destroyAllWindows()
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 if not camera.isOpened():
     print("Cannot open camera")
     tidy_up()
