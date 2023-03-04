@@ -6,22 +6,8 @@ import time
 
 debugOn = False
 
+global board, jsFile, jsVars, playerChip, aiChip, firstMove, aiDepth, pause
 
-jsFile = open("config.json")
-jsVars = json.load(jsFile)
-
-playerChip = jsVars["Player Chip"]
-aiChip = jsVars["AI Chip"]
-firstMove = jsVars["First Move"]
-aiDepth = jsVars["AI Depth"]
-pause = jsVars["AI Pause Length"]
-
-jsFile.close()
-jsVars.clear()
-
-
-board = numpy.zeros((6, 7))
-print("")
 
 def SetPos(r, c, chip):
     if chip == 'r':
@@ -225,28 +211,54 @@ def CheckWin():
         return True
     return False
 
-if firstMove == 'ai':
-    VisualBoard()
-    time.sleep(pause)
-    selection = GetBestMove(aiDepth)
-    Drop(selection, aiChip)
-    print("AI drops in Column", selection)
-    VisualBoard()
-elif firstMove == 'player':
-    VisualBoard()
+
+
+def PlayGame():
+    if firstMove == 'ai':
+        VisualBoard()
+        time.sleep(pause)
+        selection = GetBestMove(aiDepth)
+        Drop(selection, aiChip)
+        print("AI drops in Column", selection)
+        VisualBoard()
+    elif firstMove == 'player':
+        VisualBoard()
+
+    while True:
+        print("Human drops in Column", end=' ')
+        selection = int(input()) # AI vs. Human mode
+        # selection = GetBestMove(aiDepth) # Ai vs. AI mode
+        Drop(selection, playerChip)
+        if CheckWin(): break
+        VisualBoard()
+        time.sleep(pause)
+        
+        selection = GetBestMove(aiDepth)
+        Drop(selection, aiChip)
+        print("AI drops in Column", selection)
+        if CheckWin(): break
+        VisualBoard()
+
 
 while True:
-    print("Human drops in Column", end=' ')
-    #selection = int(input())
-    selection = GetBestMove(2)
-    Drop(selection, playerChip)
-    if CheckWin(): break
-    VisualBoard()
-    time.sleep(pause)
-    
-    selection = GetBestMove(aiDepth)
-    Drop(selection, aiChip)
-    print("AI drops in Column", selection)
-    if CheckWin(): break
-    VisualBoard()
-    time.sleep(pause)
+
+    jsFile = open("config.json")
+    jsVars = json.load(jsFile)
+
+    playerChip = jsVars["Player Chip"]
+    aiChip = jsVars["AI Chip"]
+    firstMove = jsVars["First Move"]
+    aiDepth = jsVars["AI Depth"]
+    pause = jsVars["AI Pause Length"]
+
+    jsFile.close()
+    jsVars.clear()
+
+    board = numpy.zeros((6, 7))
+    print("")
+
+    PlayGame()
+
+    print("Play again? (y/n)", end=' ')
+    if input() != 'y':
+        break
