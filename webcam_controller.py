@@ -25,9 +25,9 @@ while True:
         
         keypressed = cv2.waitKey(1)
         if keypressed == ord("q"):
-            break;
+            break
         elif keypressed == ord("u"):
-            upside_down = not upside_down;
+            upside_down = not upside_down
         elif keypressed == ord("s"):
             filename = time.strftime("IMG_%Y%m%d_%H%M%S.jpg", time.localtime())
             cv2.imwrite(filename, img)

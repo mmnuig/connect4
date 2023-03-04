@@ -1,0 +1,7 @@
+{
+    "Player Chip":      "y",
+    "AI Chip":          "r",
+    "First Move":       "ai",
+    "AI Depth":         2,
+    "AI Pause Length":  1
+}
