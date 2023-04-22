@@ -1,11 +1,1 @@
-{
-  "Player Chip": "r",
-  "AI Chip": "y",
-  "First Move": "player",
-  "AI Depth": 2,
-  "AI Pause Length": 1,
-  "Top Left Pos": [206, 102],
-  "Top Right Pos": [539, 98],
-  "Bottom Left Pos": [175, 279],
-  "Bottom Right Pos": [500, 288]
-}
+{"Player Chip": "r", "AI Chip": "y", "First Move": "player", "AI Depth": 2, "AI Pause Length": 1, "Top Left Pos": [173, 107], "Top Right Pos": [534, 111], "Bottom Left Pos": [141, 397], "Bottom Right Pos": [577, 400]}

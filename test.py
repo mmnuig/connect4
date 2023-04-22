@@ -1,0 +1,2 @@
+import webcam
+webcam.Feed()

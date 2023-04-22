@@ -1,13 +1,12 @@
 
 import numpy, math, time, json, img_proc, webcam
 
-
 debugOn = False
 
 board = numpy.zeros([6, 7])
-playerChip = ""
-aiChip = ""
-firstMove = ""
+playerChip = "temp"
+aiChip = "temp"
+firstMove = "temp"
 aiDepth = 0
 pause = 0
 
@@ -17,6 +16,8 @@ def LoadGame():
     jsFile = open("config.json", "r")
     jsData = json.load(jsFile)
     jsFile.close()
+    
+    global playerChip, aiChip, firstMove, aiDepth, pause
 
     playerChip = jsData["Player Chip"]
     aiChip = jsData["AI Chip"]
@@ -26,14 +27,19 @@ def LoadGame():
     
     jsData.clear()
     
-    board = numpy.zeros([6, 7])
+    #board = numpy.zeros([6, 7])
     
+    n = 0
     while n < 3:
+        time.sleep(0.5)
         if numpy.array_equal(board, CreateBoardArray()):
             n += 1
-            time.sleep(0.5)
         else:
+            VisualBoard(CreateBoardArray())
+            print("Board not blank")
             n = 0
+
+    print("Game Loaded")
 
 def CreateBoardArray():
     img = webcam.Image()
@@ -41,7 +47,7 @@ def CreateBoardArray():
     for r in range(6):
         for c in range(7):
             chip = img_proc.GetTileType(img, r, c)
-            SetPos(r, c, chip)
+            SetPos(r, c, chip, newBoard)
     return newBoard
 
 
@@ -232,21 +238,19 @@ def CheckWin():
 
 map = {0: '⬜', 1: '🔴', 10: '🟡'}
 
-def VisualBoard():
+def VisualBoard(boardChoice = board):
     str = '\n'
     for r in range(6):
         for c in range(7):
-            str += map[board[r, c]]
+            str += map[boardChoice[r, c]]
         str += '\n'
     print(str)
 
 
 
 def RunGame():
-    VisualBoard()
     if firstMove == 'ai':
         AIMove()
-        
     while True:
         PlayerMove()
         if CheckWin(): break
@@ -255,20 +259,34 @@ def RunGame():
         
 def AIMove():
     selection = GetBestMove(aiDepth)
+    print("Robot choosese column", selection)
     Drop(selection, aiChip)
-    VisualBoard()
+    print("wait for robot")
     n = 0
     while n < 3:
+        time.sleep(0.5)
         if numpy.array_equal(board, CreateBoardArray()):
             n += 1
-            time.sleep(0.5)
         else:
             n = 0
+    VisualBoard()
 
 def PlayerMove():
+    print("wait for player")
     n = 0
+    colToDropIn = -1
     while n < 3:
-        newBoard = CreateBoardArray()
+        test = False
+        while test is False:
+            time.sleep(0.5)
+            newBoard = CreateBoardArray()
+            test = False
+            for col in range(7):
+                Drop(col, playerChip)
+                if numpy.array_equal(board, newBoard):
+                    test = True
+                    colToDropIn = col
+                AntiDrop(col)
         for i in range(3):
             time.sleep(0.5)
             if numpy.array_equal(newBoard, CreateBoardArray()):
@@ -276,5 +294,16 @@ def PlayerMove():
             else:
                 n = 0
                 break
-    board = newBoard
+    Drop(colToDropIn, playerChip)
     VisualBoard()
+    
+    
+
+
+
+while True:
+    LoadGame()
+    RunGame()
+    print("Play again? (y/n)", end=' ')
+    if input() != 'y':
+        break
