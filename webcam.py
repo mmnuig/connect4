@@ -1,5 +1,5 @@
-import cv2
-import time
+
+import cv2, time
 
 def Tidy():
   camera.release()
@@ -22,11 +22,11 @@ def Image():
     time.sleep(0.01)
     return img
 
-def Feed(corners = [], color = [0, 0, 0]):
+def Feed(marks = []):
     while True:
         img = Image()
-        for loc in corners:
-            cv2.circle(img, loc, 5, color, -1)
+        for mark in marks:
+            cv2.circle(img, mark, 5, [0, 0, 0], -1)
         cv2.imshow("camera", img)
         time.sleep(0.01)
         keypressed = cv2.waitKey(1)
@@ -39,10 +39,8 @@ def Screenshot():
     filename = time.strftime("IMG_%Y%m%d_%H%M%S.jpg", time.localtime())
     cv2.imwrite(filename, Image())
     
-def Display(img = Image(), marks = []):
+def Display(marks = [], img = Image()):
     for mark in marks:
         cv2.circle(img, mark, 5, (0, 0, 0), -1)
     cv2.imshow("image", img)
     cv2.waitKey(0)
-    
-        

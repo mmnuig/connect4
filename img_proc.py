@@ -1,6 +1,20 @@
-import webcam
-import cv2
-import numpy
+
+import cv2, numpy, json, webcam
+
+yellowRange = [20, 50]
+redRange = [160, 10]
+
+jsFile = open("config.json", "r")
+jsData = json.load(jsFile)
+jsFile.close()
+
+tl = jsData["Top Left Pos"]
+tr = jsData["Top Right Pos"]
+bl = jsData["Bottom Left Pos"]
+br = jsData["Bottom Right Pos"]
+corners = [tl, tr, bl, br]
+
+jsData.clear()
 
 def CalculateCircleCentre(target):
     
@@ -26,28 +40,14 @@ def CheckPixelColor(pix):
     elif pix >= 0 and pix <= redRange[1]:
         return 'r'
     else:
-        return 'x'
-    
-def GetTileType(xPos, yPos, debug=False):
-    pixelLoc = CalculateCircleCentre([xPos, yPos])
+        return 'e'
+
+def GetTileType(img, row, col, debug=False):
+    pixelLoc = CalculateCircleCentre([row, col])
     pix_bgr = img[pixelLoc[1], pixelLoc[0]]
     np_val = numpy.uint8([[pix_bgr]])
     pix_hsv = cv2.cvtColor(np_val, cv2.COLOR_BGR2HSV)
     hue = pix_hsv[0][0][0]
     pix_type = CheckPixelColor(hue)
-    if debug: print(pix_type, hue); webcam.Display(img, [pixelLoc])
+    if debug: print(pix_type, hue); webcam.Display([pixelLoc], img)
     return pix_type
-    
-tl = [139, 45]
-tr = [540, 39]
-bl = [105, 353]
-br = [572, 350]
-corners = [tl, tr, bl, br]
-
-yellowRange = [20, 50]
-redRange = [160, 10]
-
-img = webcam.Image()
-
-for i in range(7):
-    GetTileType(5, i, True)

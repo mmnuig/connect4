@@ -1,33 +1,63 @@
-import json
-import numpy
-import math
-import time
+
+import numpy, math, time, json, img_proc, webcam
 
 
 debugOn = False
 
-global board, jsFile, jsVars, playerChip, aiChip, firstMove, aiDepth, pause
+board = numpy.zeros([6, 7])
+playerChip = ""
+aiChip = ""
+firstMove = ""
+aiDepth = 0
+pause = 0
 
 
-def SetPos(r, c, chip):
-    if chip == 'r':
-        board[r, c] = 1
-    elif chip == 'y':
-        board[r, c] = 10
-    elif chip == 'e':
-        board[r, c] = 0
+def LoadGame(): 
+    
+    jsFile = open("config.json", "r")
+    jsData = json.load(jsFile)
+    jsFile.close()
+
+    playerChip = jsData["Player Chip"]
+    aiChip = jsData["AI Chip"]
+    firstMove = jsData["First Move"]
+    aiDepth = jsData["AI Depth"]
+    pause = jsData["AI Pause Length"]
+    
+    jsData.clear()
+    
+    board = numpy.zeros([6, 7])
+    
+    while n < 3:
+        if numpy.array_equal(board, CreateBoardArray()):
+            n += 1
+            time.sleep(0.5)
+        else:
+            n = 0
+
+def CreateBoardArray():
+    img = webcam.Image()
+    newBoard = numpy.zeros([6, 7])
+    for r in range(6):
+        for c in range(7):
+            chip = img_proc.GetTileType(img, r, c)
+            SetPos(r, c, chip)
+    return newBoard
+
+
+
+def SetPos(r, c, chip, boardChoice = board):
+    if chip == 'r':   boardChoice[r, c] = 1
+    elif chip == 'y': boardChoice[r, c] = 10
+    elif chip == 'e': boardChoice[r, c] = 0
     
 def GetPos(r, c):
-    if r < 0 or r > 5 or c < 0 or c > 6:
-        return 'x'
+    if r < 0 or r > 5 or c < 0 or c > 6: return 'x'
     chip = board[r, c]
-    if chip == 0:
-        return 'e'
-    elif chip == 1:
-        return 'r'
-    elif chip == 10:
-        return 'y'
-
+    if chip == 0:    return 'e'
+    elif chip == 1:  return 'r'
+    elif chip == 10: return 'y'
+    
 def Drop(c, chip):
     r = 5
     while r >= 0:
@@ -184,18 +214,6 @@ def ScoreCalculator(chip):
                                 score += chipScore[0][it]
                             it += 1
     return score
-        
-
-
-map = {0: '⬜', 1: '🔴', 10: '🟡'}
-
-def VisualBoard():
-    str = '\n'
-    for r in range(6):
-        for c in range(7):
-            str += map[board[r, c]]
-        str += '\n'
-    print(str)
 
 
 
@@ -212,53 +230,51 @@ def CheckWin():
     return False
 
 
+map = {0: '⬜', 1: '🔴', 10: '🟡'}
 
-def PlayGame():
+def VisualBoard():
+    str = '\n'
+    for r in range(6):
+        for c in range(7):
+            str += map[board[r, c]]
+        str += '\n'
+    print(str)
+
+
+
+def RunGame():
+    VisualBoard()
     if firstMove == 'ai':
-        VisualBoard()
-        time.sleep(pause)
-        selection = GetBestMove(aiDepth)
-        Drop(selection, aiChip)
-        print("AI drops in Column", selection)
-        VisualBoard()
-    elif firstMove == 'player':
-        VisualBoard()
-
-    while True:
-        print("Human drops in Column", end=' ')
-        selection = int(input()) # AI vs. Human mode
-        # selection = GetBestMove(aiDepth) # Ai vs. AI mode
-        Drop(selection, playerChip)
-        if CheckWin(): break
-        VisualBoard()
-        time.sleep(pause)
+        AIMove()
         
-        selection = GetBestMove(aiDepth)
-        Drop(selection, aiChip)
-        print("AI drops in Column", selection)
+    while True:
+        PlayerMove()
         if CheckWin(): break
-        VisualBoard()
+        AIMove()
+        if CheckWin(): break
+        
+def AIMove():
+    selection = GetBestMove(aiDepth)
+    Drop(selection, aiChip)
+    VisualBoard()
+    n = 0
+    while n < 3:
+        if numpy.array_equal(board, CreateBoardArray()):
+            n += 1
+            time.sleep(0.5)
+        else:
+            n = 0
 
-
-while True:
-
-    jsFile = open("config.json")
-    jsVars = json.load(jsFile)
-
-    playerChip = jsVars["Player Chip"]
-    aiChip = jsVars["AI Chip"]
-    firstMove = jsVars["First Move"]
-    aiDepth = jsVars["AI Depth"]
-    pause = jsVars["AI Pause Length"]
-
-    jsFile.close()
-    jsVars.clear()
-
-    board = numpy.zeros((6, 7))
-    print("")
-
-    PlayGame()
-
-    print("Play again? (y/n)", end=' ')
-    if input() != 'y':
-        break
+def PlayerMove():
+    n = 0
+    while n < 3:
+        newBoard = CreateBoardArray()
+        for i in range(3):
+            time.sleep(0.5)
+            if numpy.array_equal(newBoard, CreateBoardArray()):
+                n += 1
+            else:
+                n = 0
+                break
+    board = newBoard
+    VisualBoard()
