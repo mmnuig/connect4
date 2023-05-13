@@ -5,14 +5,15 @@ def Tidy():
   camera.release()
   cv2.destroyAllWindows()
   
-camera = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+camera = cv2.VideoCapture(0)
+
 if not camera.isOpened():
     print("Cannot open camera")
     Tidy()
     exit()
 else:
     print("Camera is opened")
-    
+
 def Image():
     ret, img = camera.read()
     if not ret:

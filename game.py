@@ -4,30 +4,28 @@ import numpy, math, time, json, img_proc, webcam
 debugOn = False
 
 board = numpy.zeros([6, 7])
-playerChip = "temp"
-aiChip = "temp"
-firstMove = "temp"
+playerChip = 'temp'
+aiChip = 'temp'
+firstMove = 'temp'
 aiDepth = 0
-pause = 0
 
-
-def LoadGame(): 
+def LoadGame():
     
-    jsFile = open("config.json", "r")
-    jsData = json.load(jsFile)
-    jsFile.close()
+    global board, playerChip, aiChip, firstMove, aiDepth
     
-    global playerChip, aiChip, firstMove, aiDepth, pause
-
-    playerChip = jsData["Player Chip"]
-    aiChip = jsData["AI Chip"]
-    firstMove = jsData["First Move"]
-    aiDepth = jsData["AI Depth"]
-    pause = jsData["AI Pause Length"]
+    print('Player Chip (r/y)', end=' ')
+    playerChip = input()
     
-    jsData.clear()
+    print('AI Chip (r/y)', end=' ')
+    aiChip = input()
     
-    #board = numpy.zeros([6, 7])
+    print('First Move (p/a)', end=' ')
+    firstMove = input()
+    
+    print('AI Depth? (2-4)', end=' ')
+    aiDepth = input()
+    
+    board = numpy.zeros([6, 7])
     
     n = 0
     while n < 3:
@@ -36,10 +34,10 @@ def LoadGame():
             n += 1
         else:
             VisualBoard(CreateBoardArray())
-            print("Board not blank")
+            print('Board not blank')
             n = 0
 
-    print("Game Loaded")
+    print('Game Loaded')
 
 def CreateBoardArray():
     img = webcam.Image()
@@ -54,15 +52,15 @@ def CreateBoardArray():
 
 def SetPos(r, c, chip, boardChoice = board):
     if chip == 'r':   boardChoice[r, c] = 1
-    elif chip == 'y': boardChoice[r, c] = 10
+    elif chip == 'y': boardChoice[r, c] = 2
     elif chip == 'e': boardChoice[r, c] = 0
     
 def GetPos(r, c):
     if r < 0 or r > 5 or c < 0 or c > 6: return 'x'
     chip = board[r, c]
-    if chip == 0:    return 'e'
-    elif chip == 1:  return 'r'
-    elif chip == 10: return 'y'
+    if chip == 0:   return 'e'
+    elif chip == 1: return 'r'
+    elif chip == 2: return 'y'
     
 def Drop(c, chip):
     r = 5
@@ -71,14 +69,14 @@ def Drop(c, chip):
             SetPos(r, c, chip)
             return
         r -= 1
-    raise Exception("Column is full. Cannot drop chip.")
+    raise Exception('Column is full. Cannot drop chip.')
 
 def AntiDrop(c):
     for r in range(6):
         if GetPos(r, c) != 'e':
             SetPos(r, c, 'e')
             return
-    raise Exception("Trying to remove chip from empty column.")
+    raise Exception('Trying to remove chip from empty column.')
 
 def GetAvailableColumns():
     arr = []
@@ -87,11 +85,21 @@ def GetAvailableColumns():
             arr.append(c)
     return arr
 
+map = {0: '⬜', 1: '🔴', 10: '🟡'}
+
+def VisualBoard(boardChoice = board):
+    str = '\n'
+    for r in range(6):
+        for c in range(7):
+            str += map[boardChoice[r, c]]
+        str += '\n'
+    print(str)
+
 
 
 def minimax(isMaximising, depth):
     
-    if debugOn: print("depth is ", depth)
+    if debugOn: print('depth is ', depth)
     
     if(isMaximising):
         
@@ -99,24 +107,24 @@ def minimax(isMaximising, depth):
         bestScore = -math.inf
         
         options = GetAvailableColumns()
-        if debugOn: print("maximising options are: ", options)
+        if debugOn: print('maximising options are: ', options)
         for column in options:
             Drop(column, chip)
-            if debugOn: print("depth is ", depth, " & try drop in col ",column); VisualBoard()
+            if debugOn: print('depth is ', depth, ' & try drop in col ',column); VisualBoard()
             score = GetScore()
             if score == math.inf:
                 bestScore = math.inf
                 AntiDrop(column)
-                if debugOn: print("pruned score (maximiser win)")
+                if debugOn: print('pruned score (maximiser win)')
                 break
             elif depth == 1:
                 bestScore = max(bestScore, score)
             else:
                 bestScore = max(bestScore, minimax(not isMaximising, depth - 1))
             AntiDrop(column)
-            if debugOn: print("score = ", score, ", undo drop in col ",column); VisualBoard()
+            if debugOn: print('score = ', score, ', undo drop in col ',column); VisualBoard()
         
-        if debugOn: print("maximising best score ", bestScore)
+        if debugOn: print('maximising best score ', bestScore)
         return bestScore
         
     else:
@@ -125,25 +133,25 @@ def minimax(isMaximising, depth):
         bestScore = math.inf
         
         options = GetAvailableColumns()
-        if debugOn: print("minimising options are: ", options)
+        if debugOn: print('minimising options are: ', options)
         
         for column in options:
             Drop(column, chip)
-            if debugOn: print("depth is ", depth, " & try drop in col ",column); VisualBoard()
+            if debugOn: print('depth is ', depth, ' & try drop in col ',column); VisualBoard()
             score = GetScore()
             if score == -math.inf:
                 bestScore = -math.inf
                 AntiDrop(column)
-                if debugOn: print("pruned score (minimiser win)")
+                if debugOn: print('pruned score (minimiser win)')
                 break
             elif depth == 1:
                 bestScore = min(bestScore, score)
             else:
                 bestScore = min(bestScore, minimax(not isMaximising, depth - 1))
             AntiDrop(column)
-            if debugOn: print("score = ", score, ", undo drop in col ",column); VisualBoard()
+            if debugOn: print('score = ', score, ', undo drop in col ',column); VisualBoard()
         
-        if debugOn: print("minimising best score ", bestScore)
+        if debugOn: print('minimising best score ', bestScore)
         return bestScore
     
 def GetBestMove(depth):
@@ -154,7 +162,7 @@ def GetBestMove(depth):
     options = GetAvailableColumns()
     for column in options:
         Drop(column, aiChip)
-        if debugOn: print("depth is ", depth, " & try drop in col ",column); VisualBoard()
+        if debugOn: print('depth is ', depth, ' & try drop in col ',column); VisualBoard()
         score = GetScore()
         if score == math.inf:
             bestScore = math.inf
@@ -171,7 +179,7 @@ def GetBestMove(depth):
                 bestScore = minimaxScore
                 bestMove = column
         AntiDrop(column)
-        if debugOn: print("score = ", score, ", undo drop in col ",column); VisualBoard()
+        if debugOn: print('score = ', score, ', undo drop in col ',column); VisualBoard()
     
     return bestMove        
         
@@ -185,7 +193,7 @@ def GetScore():
     playerScore = ScoreCalculator(playerChip)
     
     if aiScore == math.inf and playerScore == math.inf:
-        raise Exception ("Simulataneous win and lose")
+        raise Exception ('Simulataneous win and lose')
     elif aiScore == math.inf:
         return math.inf
     elif playerScore == math.inf:
@@ -221,35 +229,24 @@ def ScoreCalculator(chip):
                             it += 1
     return score
 
-
-
 def CheckWin():
     testScore = GetScore()
     if testScore == math.inf:
         VisualBoard()
-        print("AI wins!\n")
+        print('AI wins!\n')
         return True
     elif testScore == -math.inf:
         VisualBoard()
-        print("Human wins!\n")
+        print('Human wins!\n')
         return True
     return False
 
 
-map = {0: '⬜', 1: '🔴', 10: '🟡'}
 
-def VisualBoard(boardChoice = board):
-    str = '\n'
-    for r in range(6):
-        for c in range(7):
-            str += map[boardChoice[r, c]]
-        str += '\n'
-    print(str)
-
-
+timeBetweenChecks = 0.5
 
 def RunGame():
-    if firstMove == 'ai':
+    if firstMove == 'a':
         AIMove()
     while True:
         PlayerMove()
@@ -259,12 +256,12 @@ def RunGame():
         
 def AIMove():
     selection = GetBestMove(aiDepth)
-    print("Robot choosese column", selection)
+    print('Robot choosese column', selection)
     Drop(selection, aiChip)
-    print("wait for robot")
+    print('wait for robot')
     n = 0
     while n < 3:
-        time.sleep(0.5)
+        time.sleep(timeBetweenChecks)
         if numpy.array_equal(board, CreateBoardArray()):
             n += 1
         else:
@@ -272,13 +269,13 @@ def AIMove():
     VisualBoard()
 
 def PlayerMove():
-    print("wait for player")
+    print('wait for player')
     n = 0
     colToDropIn = -1
     while n < 3:
         test = False
         while test is False:
-            time.sleep(0.5)
+            time.sleep(timeBetweenChecks)
             newBoard = CreateBoardArray()
             test = False
             for col in range(7):
@@ -296,14 +293,10 @@ def PlayerMove():
                 break
     Drop(colToDropIn, playerChip)
     VisualBoard()
-    
-    
-
-
 
 while True:
     LoadGame()
     RunGame()
-    print("Play again? (y/n)", end=' ')
+    print('Play again? (y/n)', end=' ')
     if input() != 'y':
         break
