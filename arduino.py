@@ -19,5 +19,3 @@ def DropInColumn(col):
     elif col == 4: arduino.write(b'4')
     elif col == 5: arduino.write(b'5')
     elif col == 6: arduino.write(b'6')
-    
-DropInColumn(2)
