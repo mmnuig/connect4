@@ -1,5 +1,5 @@
 
-import numpy, math, time, json, img_proc, webcam
+import numpy, math, time, img_proc, webcam, arduino
 
 debugOn = False
 
@@ -263,6 +263,7 @@ def RunGame():
         
 def AIMove():
     selection = GetBestMove(aiDepth)
+    arduino.DropInColumn(selection)
     print('Robot chooses column', selection)
     board = Drop(selection, aiChip)
     print('wait for robot')
