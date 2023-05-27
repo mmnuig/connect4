@@ -51,34 +51,39 @@ def CreateBoardArray():
     return testBoard
 
 
-
-def SetPos(r, c, chip, boardChoice = board):
+def SetPosTestBoard(r, c, chip, boardChoice):
     if chip == 'r':   boardChoice[r, c] = 1
     elif chip == 'y': boardChoice[r, c] = 2
     elif chip == 'e': boardChoice[r, c] = 0
     return boardChoice
+
+def SetPos(r, c, chip):
+    if chip == 'r':   board[r, c] = 1
+    elif chip == 'y': board[r, c] = 2
+    elif chip == 'e': board[r, c] = 0
+    return board
     
-def GetPos(r, c, boardChoice = board):
+def GetPos(r, c):
     if r < 0 or r > 5 or c < 0 or c > 6: return 'x'
-    chip = boardChoice[r, c]
+    chip = board[r, c]
     if chip == 0:   return 'e'
     elif chip == 1: return 'r'
     elif chip == 2: return 'y'
     
-def Drop(c, chip, boardChoice = board):
+def Drop(c, chip):
     r = 5
     while r >= 0:
-        if GetPos(r, c, boardChoice) == 'e':
-            boardChoice = SetPos(r, c, chip, boardChoice)
-            return boardChoice
+        if GetPos(r, c) == 'e':
+            board = SetPos(r, c, chip)
+            return board
         r -= 1
     raise Exception('Column is full. Cannot drop chip.')
 
-def AntiDrop(c, boardChoice = board):
+def AntiDrop(c):
     for r in range(6):
-        if GetPos(r, c, boardChoice) != 'e':
-            boardChoice = SetPos(r, c, 'e', boardChoice)
-            return boardChoice
+        if GetPos(r, c) != 'e':
+            board = SetPos(r, c, 'e')
+            return board
     raise Exception('Trying to remove chip from empty column.')
 
 def GetAvailableColumns():
@@ -90,11 +95,11 @@ def GetAvailableColumns():
 
 map = {0: '⬜', 1: '🔴', 2: '🟡'}
 
-def VisualBoard(boardChoice = board):
+def VisualBoard():
     str = '\n'
     for r in range(6):
         for c in range(7):
-            str += map[boardChoice[r, c]]
+            str += map[board[r, c]]
         str += '\n'
     print(str)
 
