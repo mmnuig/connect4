@@ -228,7 +228,6 @@ def CheckWin():
 
 
 def RunGame():
-    print(board)
     VisualBoard()
     if firstMove == 'a':
         AIMove()
@@ -241,6 +240,7 @@ def RunGame():
 def AIMove():
     global board
     selection = GetBestMove(aiDepth)
+    time.sleep(1)
     print('Robot chooses column', selection)
     board = Drop(selection, aiChip)
     VisualBoard()
@@ -251,7 +251,6 @@ def PlayerMove():
     colToDropIn = int(input())
     board = Drop(colToDropIn, playerChip)
     VisualBoard()
-    time.sleep(1)
 
 while True:
     LoadGame()

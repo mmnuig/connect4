@@ -47,7 +47,7 @@ def CreateBoardArray():
     for r in range(6):
         for c in range(7):
             chip = img_proc.GetTileType(img, r, c)
-            testBoard = SetPos(r, c, chip, testBoard)
+            testBoard = SetPosTestBoard(r, c, chip, testBoard)
     return testBoard
 
 
