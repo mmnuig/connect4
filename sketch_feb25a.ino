@@ -7,6 +7,56 @@ Adafruit_DCMotor *motor3 = AFMS.getMotor(3);
 Adafruit_DCMotor *motor2 = AFMS.getMotor(2);
 Adafruit_DCMotor *motor1 = AFMS.getMotor(1);
 int m1direction = 0;
+// LEDs indicating direction
+const int forwardsLED = 8;
+const int backwardsLED = 9;
+const int limitPin = 2;
+// millis() returns an unsigned long value
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; adjust if we see shudder
+int lastLimitState = HIGH;           // the previous state of the limit switch
+unsigned long lastMessageTime = 0;   // Use the value of lastMessageTime to stop spamming the console
+
+/*
+ * limitCheck() tests if the limit switch has been activated and returns TRUE if it has or
+ * FALSE otherwise.
+ * 
+ * The switch is considered active if the input has gone from LOW to HIGH and we've waited
+ * for longer than the debounce time to ignore noise.
+ * 
+ * Based on code by David A. Mellis, Limor Fried, Mike Walters, and Arturo Guadalupi.
+ * http://www.arduino.cc/en/Tutorial/Debounce
+ */
+
+
+bool limitCheck() {
+  bool atLimit = false;
+  int limitState = LOW;  // initialising to LOW means we can detect a wire break
+  int reading;
+
+  reading = digitalRead(limitPin);  // Get the current state of the switch
+  if (reading != lastLimitState) {  // If the switch changed, due to noise or pressing:
+    lastDebounceTime = millis();    // reset the debouncing timer
+  }
+
+  // If time has passed and the button state still hasn't changed, then we take it
+  // that it really has been pressed.
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != limitState) {
+      limitState = reading;
+      if (limitState == HIGH) {  // we only care about a transition to HIGH
+        atLimit = true;
+        if ((millis() - lastMessageTime) > 1000) {   // Don't print another message on the console
+          Serial.println("Limit switch activated");  // more than once a second
+          lastMessageTime = millis();
+        }
+      }
+    }
+  }
+  lastLimitState = reading;  // save the state for the next call
+
+  return(atLimit);
+}
 
 int in1 = 5;
 int in2 = 6;
@@ -77,11 +127,20 @@ void backward1() {
   delay(500);
 }
 
+void gohome() {
+  motor1->run(BACKWARD);
+  while (! limitCheck()) {
+    Serial.print(".");
+  }
+    Serial.println("limitCheck true, stopping M1 backwards motion");
+    stopallmotors();
+}
+
 void forward2() {
   motor2->run(FORWARD);
-  delay(500);
+  delay(100);
   motor2->run(RELEASE);
-  delay(500);
+  delay(100);
 }
 
 void forward3() {
@@ -93,9 +152,9 @@ void forward3() {
 
 void backward2() {
   motor2->run(BACKWARD);
-  delay(500);
+  delay(100);
   motor2->run(RELEASE);
-  delay(500);
+  delay(100);
 }
 
 void backward3() {
@@ -125,31 +184,31 @@ void m1bigmovebackward() {
 }
 
 void col4() { 
-  fullmove(20, 27);
+  fullmove(20, 20);
 }
 
 void col3() { 
-  fullmove(17, 25);
+  fullmove(16, 16);
 }
 
 void col1() { 
-  fullmove(12, 18);
+  fullmove(10, 10);
 }
 
 void col2() { 
-  fullmove(14, 21);
+  fullmove(13, 13);
 }
 
 void col0() { 
-  fullmove(9, 15);    
+  fullmove(8, 8);    
 }
 
 void col5() { 
-  fullmove(23, 30);    
+  fullmove(22, 22);    
 }
 
 void col6() { 
-  fullmove(25, 32);    
+  fullmove(26, 26);    
 }
 
 void fullmove(int fwd, int bck) { 
@@ -172,6 +231,8 @@ void fullmove(int fwd, int bck) {
   forward5();
 
   //move back to home
+  gohome();
+  /*
   motor1->run(BACKWARD);
   if (m1direction == -1) {
     Serial.println("No Direction Change");
@@ -185,6 +246,7 @@ void fullmove(int fwd, int bck) {
   }
   motor1->run(RELEASE);
   delay(500);
+  */
 
   //pick new coin
   backward5();
@@ -194,6 +256,7 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
+  pinMode(limitPin, INPUT_PULLUP);
   Serial.begin(9600);
   AFMS.begin();
   motor4->run(RELEASE);
@@ -300,6 +363,9 @@ void controlmotor(int motor_number) {
  }
  if (motor_number == 36) {
    col6();
+ }
+ if (motor_number == 40) {
+   gohome();
  }
 }
 
